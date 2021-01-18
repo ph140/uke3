@@ -51,6 +51,12 @@ def lagfart(tid, fart, akselerasjon):
         fart.append(fart[i-1]+integral(tid, akselerasjon, i))
 
 
+def skrivfil(fil, data):
+    with open(fil+'.txt', 'w') as file:
+        for i in data:
+            file.write(str(i)+'\n')
+
+
 # Lager listene som trengs
 liten_akselerasjon, liten_tid = til_liste(liten_data)
 middels_akselerasjon, middels_tid = til_liste(middels_data)
@@ -60,6 +66,10 @@ stor_akselerasjon, stor_tid = til_liste(stor_data)
 lagfart(liten_tid, liten_fart, liten_akselerasjon)
 lagfart(middels_tid, middels_fart, middels_akselerasjon)
 lagfart(stor_tid, stor_fart, stor_akselerasjon)
+
+skrivfil('liten_aks', liten_akselerasjon)
+skrivfil('middels_aks', middels_akselerasjon)
+skrivfil('stor_aks', stor_akselerasjon)
 
 plt.plot(liten_tid, liten_fart, 'r-')
 plt.plot(middels_tid, middels_fart, 'b-')
