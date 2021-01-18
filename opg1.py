@@ -1,42 +1,37 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
+
 with open('litenfallskjerm.txt', 'r') as file:
-    data = file.read()
+    liten_data = file.read()
+with open('middelsfallskjerm.txt', 'r') as file:
+    middels_data = file.read()
+with open('storfallskjerm.txt', 'r') as file:
+    stor_data = file.read()
 
 
-data = data.strip('Akselerasjonsverdiene er gitt ved ')
-data = data.replace('Verdiene for tid er gitt ved ', '')
-data = data.split('[')
+def til_liste(data):
+    data = data.strip('Akselerasjonsverdiene er gitt ved ')
+    data = data.replace('Verdiene for tid er gitt ved ', '')
+    data = data.split('[')
+    return fiksdata(data[1]), fiksdata(data[2])
 
 
-def fiksdata(minliste):
-    print(minliste)
-    minliste.split(',')
-    minliste[-1] = minliste[-1].replace(']', '')
+def fiksdata(liste):
+    liste = liste.split(',')
+    liste[-1] = liste[-1].replace(']', '')
 
-    for index, item in enumerate(minliste):
-        minliste[index] = float(item.strip())
-
-    return minliste
+    for index, item in enumerate(liste):
+        liste[index] = float(item.strip())
+    return liste
 
 
-aksel = fiksdata(data[1])
-print(aksel)
+liten_akselerasjon, liten_tid = til_liste(liten_data)
+middels_akselerasjon, middels_tid = til_liste(middels_data)
+stor_akselerasjon, stor_tid = til_liste(stor_data)
 
-#
-# aks = data[1].split(',')
-# tid = data[2].split(',')
-#
-# aks[-1] = aks[-1].replace(']', '')
-# tid[-1] = tid[-1].replace(']', '')
-#
-#
-# for index, item in enumerate(aks):
-#     aks[index] = float(item.strip())
-#
-# for index, item in enumerate(tid):
-#     tid[index] = float(item.strip())
-#
-# plt.plot(tid, aks, 'r--')
-# plt.show()
+
+plt.plot(liten_tid, liten_akselerasjon, 'r-')
+plt.plot(middels_tid, middels_akselerasjon, 'b-')
+plt.plot(stor_tid, stor_akselerasjon, 'g-')
+plt.show()
