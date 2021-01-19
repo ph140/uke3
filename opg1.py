@@ -27,31 +27,24 @@ def datatrim(data):
     return liste
 
 
-def integral(datatid, datasett, x):
-    return (datatid[x+1]-datatid[x])*((datasett[x]+datasett[x+1]))/2
+# Integrasjon ved trapesmetoden
+def trapes_metode(x, y, indeks):
+    return (x[indeks+1]-x[indeks])*((y[indeks]+y[indeks+1]))/2
 
 
-def lagfart(tid, akselerasjon):
-    fart = [0]
-    for i, j in enumerate(tid[:-1]):
-        fart.append(fart[i-1]+integral(tid, akselerasjon, i))
-    return fart
+# Returnerer en liste med integrete verdier av argument-listen
+def integrasjon(tid, y_verdier0):
+    y_verdier1 = [0]
+    for indeks, j in enumerate(tid[:-1]):
+        y_verdier1.append(y_verdier1[indeks-1] +
+                          trapes_metode(tid, y_verdier0, indeks))
+    return y_verdier1
 
 
-def skrivfil(fil, aks, tid):
-    with open('aksfiler/'+fil+'.txt', 'w') as file:
-        for i, j in enumerate(aks):
-            akstxt = str(j)
-            for _ in range(24-len(akstxt)):
-                akstxt += ' '
-            file.write(akstxt)
-            file.write(str(tid[i])+'\n')
-
-
-def find_k(tid, fart, avvik=99999, k=0.01):
+def finn_k(tid, fart, avvik=99999, k=0.01):
     g = 9.81  # tyngdeakselerasjon
     m = 0.37  # vekten til ballen
-    ny_avvik = 0
+    nytt_avvik = 0
 
     t0 = 0  # Starttid er 0
     tslutt = tid[-1]  # Slutt-tid er samme som siste element i fartslisten
@@ -65,76 +58,62 @@ def find_k(tid, fart, avvik=99999, k=0.01):
         v[i+1] = v[i] + h * (g - k * v[i]**2 / m)
         t[i+1] = t[i] + h
 
+    # Regner ut hvor mye prognosen avviker fra de målte dataene
     for i in range(500):
-        ny_avvik += abs(v[i]-fart[i])
+        nytt_avvik += abs(v[i]-fart[i])
 
-    if ny_avvik < avvik:
+    # Dersom avviket er mindre enn det forrige fortsetter algoritmen med 0.01
+    # større k-verdi, for å se om det kan bli enda mindre avvik.
+    if nytt_avvik < avvik:
         k += 0.01
-        k, v = find_k(tid, fart, ny_avvik, k)
+        k, v = finn_k(tid, fart, nytt_avvik, k)
+
+    # Returnerer det minste avviket
     return(k, v)
 
 
-# Åpner og leser av filene
-with open('litenfallskjerm.txt', 'r') as file:
-    liten_data = file.read()
-with open('middelsfallskjerm.txt', 'r') as file:
-    middels_data = file.read()
-with open('storfallskjerm.txt', 'r') as file:
-    stor_data = file.read()
+class FallSkjerm():
+    def __init__(self, navn, radius, color):
+        self.navn = navn
+        self.data = self.getData()
+        self.akselerasjon, self.tid = til_liste(self.data)
+        self.fart = integrasjon(self.tid, self.akselerasjon)
+        self.distanse = integrasjon(self.tid, self.fart)
+        self.k, self.v = finn_k(self.tid, self.fart)
+        self.radius = radius
+        self.areal = round(np.pi*self.radius**2, 5)
+        self.forhold = round(self.areal/self.k, 5)
+        self.color = color
+        self.lagre()
+        self.laggraf()
 
-# Lager listene som trengs
-liten_akselerasjon, liten_tid = til_liste(liten_data)
-middels_akselerasjon, middels_tid = til_liste(middels_data)
-stor_akselerasjon, stor_tid = til_liste(stor_data)
+    def getData(cls):
+        with open(cls.navn+'fallskjerm.txt', 'r') as file:
+            return file.read()
 
-# Beregner fart
-liten_fart = lagfart(liten_tid, liten_akselerasjon)
-middels_fart = lagfart(middels_tid, middels_akselerasjon)
-stor_fart = lagfart(stor_tid, stor_akselerasjon)
+    # Lagrer akselersajonsverdiene i kolonneform i nye filer.
+    def lagre(cls):
+        filnavn = cls.navn+'_akselerasjon.txt'
+        with open(filnavn, 'w') as file:
+            for i, j in enumerate(cls.akselerasjon):
+                akstxt = str(j)
+                for _ in range(24-len(akstxt)):
+                    akstxt += ' '
+                file.write(akstxt+str(cls.tid[i])+'\n')
 
-# Beregner distanse
-liten_distanse = lagfart(liten_tid, liten_fart)
-middels_distanse = lagfart(middels_tid, middels_fart)
-stor_distanse = lagfart(stor_tid, stor_fart)
-
-# Lagrer akselerasjon og tid i filer
-skrivfil('liten_aks', liten_akselerasjon, liten_tid)
-skrivfil('middels_aks', middels_akselerasjon, middels_tid)
-skrivfil('stor_aks', stor_akselerasjon, stor_tid)
-
-# Beregner k-verdier, og farts-prognoser basert på eulers metode
-liten_k, v1 = find_k(liten_tid, liten_fart)
-middels_k, v2 = find_k(middels_tid, middels_fart)
-stor_k, v3 = find_k(stor_tid, stor_fart)
-
-# Radius-verdier oppgitt i oppgaven
-liten_radius = 0.11
-middels_radius = 0.17
-stor_radius = 0.33
-
-liten_areal = round(np.pi*liten_radius**2, 5)
-middels_areal = round(np.pi*middels_radius**2, 5)
-stor_areal = round(np.pi*stor_radius**2, 5)
-
-liten_ratio = round(liten_areal/liten_k, 5)
-middels_ratio = round(middels_areal/middels_k, 5)
-stor_ratio = round(stor_areal/stor_k, 5)
+    # Plotter grafer for fart, prognose-fart og distanse
+    def laggraf(cls):
+        plt.plot(cls.tid, cls.v, cls.color+'--', label='Prognose')
+        plt.plot(cls.tid, cls.fart, cls.color, label='Målte data')
+        plt.plot(cls.tid, cls.distanse, cls.color+':', label='Distanse')
 
 
-print(f'Liten_k: {liten_k}\nMiddels k: {middels_k}\nStor_k: {stor_k}\n\n\n')
-print(f'Liten: {liten_areal}\nMiddels: {middels_areal}\nStor: {stor_areal}\n')
-print(f'Liten: {liten_ratio}\nMiddels: {middels_ratio}\nStor: {stor_ratio}\n')
-print(f'{liten_distanse[-1]}\n {middels_distanse[-1]}\n {stor_distanse[-1]}')
+# Lager de tre instansene av fallskjermene
+liten = FallSkjerm('liten', 0.11, 'r')
+middels = FallSkjerm('middels', 0.17, 'g')
+stor = FallSkjerm('stor', 0.26, 'b')
 
-plt.plot(liten_tid, v1, 'r--', label='fart av prognose')
-plt.plot(liten_tid, liten_fart, 'r-', label='fart av data')
-plt.plot(liten_tid, liten_distanse, 'r:', label='distanse')
-plt.plot(middels_tid, v2, 'b--')
-plt.plot(middels_tid, middels_fart, 'b-')
-plt.plot(middels_tid, middels_distanse, 'b:')
-plt.plot(stor_tid, v3, 'g-')
-plt.plot(stor_tid, stor_fart, 'g-')
-plt.plot(stor_tid, stor_distanse, 'g:')
+# Lager aksetitler og viser grafen
 plt.xlabel('Tid (s)')
 plt.ylabel('Fart (m/s)')
 plt.legend()
