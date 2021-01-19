@@ -22,7 +22,6 @@ def til_liste(data):
     skille akselerasjon og tid.
     Returnerer en liste for tid, og en for akselerasjon.
     """
-    data = data.strip('Akselerasjonsverdiene er gitt ved ')
     data = data.replace('Verdiene for tid er gitt ved ', '')
     data = data.split('[')
     return datatrim(data[1]), datatrim(data[2])
@@ -51,10 +50,14 @@ def lagfart(tid, fart, akselerasjon):
         fart.append(fart[i-1]+integral(tid, akselerasjon, i))
 
 
-def skrivfil(fil, data):
+def skrivfil(fil, aks, tid):
     with open(fil+'.txt', 'w') as file:
-        for i in data:
-            file.write(str(i)+'\n')
+        for i, j in enumerate(aks):
+            akstxt = str(j)
+            for _ in range(24-len(akstxt)):
+                akstxt += ' '
+            file.write(akstxt)
+            file.write(str(tid[i])+'\n')
 
 
 # Lager listene som trengs
@@ -67,9 +70,9 @@ lagfart(liten_tid, liten_fart, liten_akselerasjon)
 lagfart(middels_tid, middels_fart, middels_akselerasjon)
 lagfart(stor_tid, stor_fart, stor_akselerasjon)
 
-skrivfil('liten_aks', liten_akselerasjon)
-skrivfil('middels_aks', middels_akselerasjon)
-skrivfil('stor_aks', stor_akselerasjon)
+skrivfil('liten_aks', liten_akselerasjon, liten_tid)
+skrivfil('middels_aks', middels_akselerasjon, middels_tid)
+skrivfil('stor_aks', stor_akselerasjon, stor_tid)
 
 plt.plot(liten_tid, liten_fart, 'r-')
 plt.plot(middels_tid, middels_fart, 'b-')
