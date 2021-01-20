@@ -46,14 +46,14 @@ def finn_k(tid, fart, avvik=99999, k=0.01):
     m = 0.37  # vekten til ballen
     nytt_avvik = 0
 
-    t0 = 0  # Starttid er 0
     tslutt = tid[-1]  # Slutt-tid er samme som siste element i fartslisten
     N = 500  # 500 steg som i fartslisten
-    h = (tslutt-t0)/(N-1)  # Samme tidsintervalll som i tidslisten
+    h = (tslutt)/(N-1)  # Samme tidsintervalll som i tidslisten
 
     v = np.zeros(N)  # Liste der vi fyller inn verdier for fart
     t = np.zeros(N)  # Liste der vi fyller inn verdier for tid
 
+    # Eulers metode
     for i in range(N-1):
         v[i+1] = v[i] + h * (g - k * v[i]**2 / m)
         t[i+1] = t[i] + h
@@ -69,7 +69,7 @@ def finn_k(tid, fart, avvik=99999, k=0.01):
         k, v = finn_k(tid, fart, nytt_avvik, k)
 
     # Returnerer det minste avviket
-    return(k, v)
+    return(round(k, 5), v)
 
 
 class FallSkjerm():
@@ -86,6 +86,7 @@ class FallSkjerm():
         self.color = color
         self.lagre()
         self.laggraf()
+        self.skriv_svar()
 
     def getData(cls):
         with open(cls.navn+'fallskjerm.txt', 'r') as file:
@@ -107,13 +108,23 @@ class FallSkjerm():
         plt.plot(cls.tid, cls.fart, cls.color, label='Målte data')
         plt.plot(cls.tid, cls.distanse, cls.color+':', label='Distanse')
 
+    # Printer areal, k-verdi og forhold
+    def skriv_svar(cls):
+        navn = cls.navn
+        navn = navn.capitalize()
+        print(f'{navn} fallskjerm:')
+        print(f'Radius: {cls.radius}')
+        print(f'Areal: {cls.areal}')
+        print(f'K-verdi: {cls.k}')
+        print(f'Forhold: {cls.forhold}\n')
+
 
 # Lager de tre instansene av fallskjermene
 liten = FallSkjerm('liten', 0.11, 'r')
 middels = FallSkjerm('middels', 0.17, 'g')
 stor = FallSkjerm('stor', 0.26, 'b')
 
-# Lager aksetitler og viser grafen
+# Lager aksetitler, legend og viser grafen
 plt.xlabel('Tid (s)')
 plt.ylabel('Fart (m/s)')
 plt.legend()
