@@ -108,7 +108,7 @@ class FallSkjerm():
         plt.plot(cls.tid, cls.fart, cls.color, label='Målte data')
         plt.plot(cls.tid, cls.distanse, cls.color+':', label='Distanse')
 
-    # Printer areal, k-verdi og forhold
+    # Printer areal, k-verdi og forhold.
     def skriv_svar(cls):
         navn = cls.navn
         navn = navn.capitalize()
