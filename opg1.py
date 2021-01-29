@@ -1,28 +1,12 @@
-# usr/bin/!
 import numpy as np
 from matplotlib import pyplot as plt
 
 
-def datatrim(data):
-    """
-    Lager en liste med alle verdiene, fjerner ']' fra det siste elementet.
-    Fjerner whitespace.
-    Returnerer en liste med floats.
-    """
-    liste = data.split(',')
-    liste[-1] = liste[-1].replace(']', '')
-
-    for i, verdi in enumerate(liste):
-        liste[i] = float(verdi.strip())
-    return liste
-
-
-# Integrasjon ved trapesmetoden
 def trapes_metode(x, y, i):
-    return (x[i+1] - x[i]) * ((y[i] + y[i+1])) / 2
+    return (x[i+1] - x[i]) * ((y[i] + y[i+1]))
 
 
-class FallSkjerm():
+class fallSkjerm():
     def __init__(self, navn, radius, color):
         self.navn = navn
         self.akselerasjon, self.tid = self.hentData()
@@ -37,23 +21,20 @@ class FallSkjerm():
         self.laggraf()
         self.skriv_svar()
 
-    # Returnerer en liste med akselerasjon, og en med tid
     def hentData(cls):
         with open(cls.navn+'fallskjerm.txt', 'r') as file:
             data = file.read()
-        data = data.replace('Verdiene for tid er gitt ved ', '')
-        data = data.split('[')
-        return datatrim(data[1]), datatrim(data[2])
+
+        aks = list(map(float, data.split("[")[1].split("]")[0].split(", ")))
+        tid = list(map(float, data.split("[")[2].split("]")[0].split(", ")))
+        return aks, tid
 
     # Lagrer akselersajonsverdiene i kolonneform i nye filer.
     def lagre(cls):
-        filnavn = cls.navn+'_akselerasjon.txt'
-        with open(filnavn, 'w') as file:
+        with open(cls.navn+'_akselerasjon.txt', 'w') as file:
             for i, j in enumerate(cls.akselerasjon):
-                akstxt = str(j)
-                for _ in range(24-len(akstxt)):
-                    akstxt += ' '
-                file.write(akstxt+str(cls.tid[i])+'\n')
+                akstxt = str(j) + (24-len(str(j)))*' '
+                file.write(akstxt + str(cls.tid[i]) + '\n')
 
     # Plotter grafer for fart, prognose-fart og distanse
     def laggraf(cls):
@@ -63,19 +44,16 @@ class FallSkjerm():
 
     # Printer areal, k-verdi og forhold.
     def skriv_svar(cls):
-        navn = cls.navn
-        navn = navn.capitalize()
-        print(f'{navn} fallskjerm:')
-        print(f'Radius: {cls.radius}')
-        print(f'Areal: {cls.areal}')
-        print(f'K-verdi: {cls.k}')
-        print(f'Forhold: {cls.forhold}\n')
+        print(f'{cls.navn.capitalize()} fallskjerm:')
+        print(f'Forhold: {cls.forhold}')
+        print(f'Distanse: {cls.distanse[-1]}\n')
 
     def finn_k(cls, k=0.01, avvik=9999):
         g = 9.81  # tyngdeakselerasjon
         m = 0.37  # vekten til ballen
         nytt_avvik = 0  # Lager ny avvik for ny k-verdi
-        tslutt = cls.tid[-1]  # Slutt-tid er lik siste element i tidslisten
+        # Slutt-tid er lik siste element i tidslisten
+        tslutt = cls.tid[-1]
         N = 500  # 500 steg som i fartslisten
         h = (tslutt)/(N-1)  # Samme tidsintervalll som i tidslisten
 
@@ -93,8 +71,8 @@ class FallSkjerm():
 
         # Om avviket er mindre enn det forrige fortsetter algoritmen med 0.01
         # større k-verdi, for å se om det kan bli enda mindre avvik.
-        if nytt_avvik < avvik:
-            k += 0.01
+        if abs(nytt_avvik) < abs(avvik):
+            k += 0.001
             k, v = cls.finn_k(k, nytt_avvik)
 
         # Returnerer det minste avviket, og fartslisten for den k-verdien
@@ -108,9 +86,9 @@ class FallSkjerm():
 
 
 # Lager de tre instansene av fallskjermene
-liten = FallSkjerm('liten', 0.11, 'r')
-middels = FallSkjerm('middels', 0.17, 'g')
-stor = FallSkjerm('stor', 0.26, 'b')
+liten = fallSkjerm('liten', 0.11, 'r')
+middels = fallSkjerm('middels', 0.17, 'g')
+stor = fallSkjerm('stor', 0.26, 'b')
 
 # Lager aksetitler, legend og viser grafen
 plt.xlabel('Tid (s)')
